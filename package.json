@@ -4,7 +4,7 @@
   "description": "Sandobox E2EE",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/tissarni/E2EE/issues"
   },
-  "homepage": "https://github.com/tissarni/E2EE#readme"
+  "homepage": "https://github.com/tissarni/E2EE#readme",
+  "dependencies": {
+    "prompt": "^1.1.0"
+  }
 }
