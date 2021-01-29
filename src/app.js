@@ -13,6 +13,11 @@
         ],
         ...
     ]
+    Alice -> [Keys State]
+    Alice -> Message
+    Bob -> [Request Keys State for Bob public Key]
+    Alice -> [Keys State with Bob encripted key]
+    Alice -> Message
 ]
 
 Step1. Alice alone
@@ -36,20 +41,38 @@ Step3. Alice want to send a message
 
 */
 
+const { Client } = require("./client");
+const {
+  createLink,
+  connect,
+  exchangePrivateKey,
+  encrypt,
+  decrypt,
+} = require("./cryptographie");
+const { Server } = require("./server");
 
-const { Client } = require('./client');
-const {createLink, encrypt, decrypt} = require('./cryptographie');
-const { Server } = require('./server');
-
-
-const twakeChannel = new Server()
+const twakeChannel = new Server();
 const bob = new Client("1234232", "bob");
 const alice = new Client("1243538", "alice");
 const titou = new Client("1243538", "titou");
 
+createLink(bob, twakeChannel);
+connect(alice, twakeChannel);
+exchangePrivateKey(bob, alice, twakeChannel);
 
+//console.log(twakeChannel);
+console.log("clef av chiffrment", bob.encrypted_channel_privateKey);
+alice.encrypted_channel_privateKey = decrypt(
+  Buffer.from(alice.encrypted_channel_privateKey),
+  alice
+);
 
+console.log(
+  alice.encrypted_channel_privateKey.toString() ===
+    bob.encrypted_channel_privateKey.toString()
+);
 
+/*
 twakeChannel.socketConnect(bob, (message) => {
     console.log("Bob received: ", message);
 });
@@ -61,16 +84,12 @@ twakeChannel.socketConnect(alice, (message) => {
 twakeChannel.socketConnect(titou, (message) => {
     console.log("Titou received: ", message);
 });
-
 twakeChannel.socketSend(bob, "message sent by socket");
 
 console.log("Bob http result", twakeChannel.httpSend("message:send", "message sent by http"));
+console.log(twakeChannel);*/
 
-
-
-createLink(bob, alice, titou, twakeChannel);
-
-
+/*
 const message = "Twake E2EE is comming";
 
 
@@ -80,7 +99,4 @@ console.log(twakeChannel)
 bob.receive(twakeChannel, alice);
 titou.receive(twakeChannel, alice);
 console.log("recu chez bob: ", bob.received);
-console.log("recu chez titou: ",titou.received);
-
-
-
+console.log("recu chez titou: ",titou.received);*/

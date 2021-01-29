@@ -6,9 +6,13 @@ class Client {
     constructor(id, name) {
         this.id = id,
         this.name = name,
-        this.ecdh = crypto.createECDH('secp256k1')
-        this.sended = []
-        this.received = []
+        this.ecdh = crypto.createECDH('secp256k1'),
+        /*this.ecdh.generateKeys();
+        this.publicKey = this.ecdh.getPublicKey(),
+        this.privateKey = this.ecdh.getPrivateKey()*/
+        this.keys =  crypto.generateKeyPairSync('rsa', {
+            modulusLength: 2048,
+        })
     }
 
     getId() {

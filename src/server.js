@@ -3,9 +3,6 @@ class Server {
 
     
     constructor() {
-        this.bobMessages = [],
-        this.aliceMessages = [],
-        this.titouMessages = [],
         this.member = [],
         this.publicKey = []
         
