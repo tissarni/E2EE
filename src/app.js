@@ -41,15 +41,15 @@ Step3. Alice want to send a message
 
 */
 
-const { Client } = require("./client");
+const { Client } = require("./client/client");
 const {
   createLink,
   connect,
   exchangePrivateKey,
   encrypt,
   decrypt,
-} = require("./cryptographie");
-const { Server } = require("./server");
+} = require("./utils/cryptographie");
+const { Server } = require("./database/server");
 
 const twakeChannel = new Server();
 const bob = new Client("bob");
@@ -59,18 +59,24 @@ const titou = new Client("titou");
 createLink(bob, twakeChannel);
 connect(alice, twakeChannel);
 connect(titou, twakeChannel);
+console.log("batatartd", bob);
 exchangePrivateKey(bob, alice, twakeChannel);
 exchangePrivateKey(bob, titou, twakeChannel);
 
-bob.encrypted_channel_privateKey = decrypt(
-  Buffer.from(bob.encrypted_channel_privateKey),
-  bob
+bob.encrypted_channel_privateKey = bob.decryption(
+  Buffer.from(bob.encrypted_channel_privateKey)
 );
-alice.encrypted_channel_privateKey = decrypt(
-  Buffer.from(alice.encrypted_channel_privateKey),
-  alice
+
+alice.encrypted_channel_privateKey = alice.decryption(
+  Buffer.from(alice.encrypted_channel_privateKey)
 );
-titou.encrypted_channel_privateKey = decrypt(
-  Buffer.from(titou.encrypted_channel_privateKey),
-  titou
+titou.encrypted_channel_privateKey = titou.decryption(
+  Buffer.from(titou.encrypted_channel_privateKey)
+);
+
+console.log(
+  titou.encrypted_channel_privateKey.toString() ===
+    bob.encrypted_channel_privateKey.toString() &&
+    titou.encrypted_channel_privateKey.toString() ===
+      alice.encrypted_channel_privateKey.toString()
 );

@@ -1,12 +1,13 @@
-const { newSharedKey } = require("./cryptographie");
-const { encrypt, decrypt } = require("./cryptographie");
+const { ClientInDb } = require("../client/clientInDb");
+const { Database } = require("./database");
+
 class Server {
   constructor() {
-    (this.member = []), (this.publicKey = []), (this.database = []);
+    this.database = new Database();
   }
 
   addMember(client) {
-    this.member.push(client);
+    this.database.member.push(client);
   }
 
   send(sender, receiver1, receiver2) {
@@ -22,29 +23,29 @@ class Server {
     }
     if (action === "connect") {
       this.socketSend(null, body);
-      this.member.push(body);
+      const userToconnect = this.httpSend("save", body);
+      this.database.member.push(userToconnect);
     }
 
     if (action === "push_DB") {
       this.socketSend(null, body);
-      this.database.push(body);
+      this.database.feed.push(body);
     }
 
     if (action === "find") {
       this.socketSend(null, body);
-      return this.member.find((element) => element === body);
+      const toFind = body.name.toString();
+      return this.database.member.find((element) => element.name === toFind);
     }
 
-    if (action === "encrypt") {
-      let client = this.httpSend("find", body);
+    if (action === "save") {
       this.socketSend(null, body);
-      client.encrypt(client.encrypted_channel_privateKey, client);
-    }
-
-    if (action === "decrypt") {
-      this.socketSend(null, body);
-      let client = this.httpSend("find", body[0]);
-      client.encrypt(body[1], client);
+      var user = new ClientInDb(
+        body.name,
+        body.encrypted_channel_privateKey,
+        body.keys.publicKey
+      );
+      return user;
     }
   }
 
