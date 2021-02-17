@@ -4,15 +4,8 @@ const { Database } = require("./database");
 class Server {
   constructor() {
     this.database = new Database();
-  }
-
-  addMember(client) {
-    this.database.member.push(client);
-  }
-
-  send(sender, receiver1, receiver2) {
-    receiver1.receive(this, sender);
-    receiver2.receive(this.sender);
+    this.feedCounter = 1;
+    this.publicKeyCounter = 1;
   }
 
   httpSend(action, body) {
@@ -22,14 +15,23 @@ class Server {
       //Some code that represent sending a message to the server
     }
     if (action === "connect") {
-      this.socketSend(null, body);
       const userToconnect = this.httpSend("save", body);
+      this.socketSend(null, userToconnect);
+      this.httpSend("push_public_Key", {
+        name: userToconnect.name,
+        publicKey: userToconnect.publicKey,
+      });
       this.database.member.push(userToconnect);
     }
 
-    if (action === "push_DB") {
+    if (action === "push_feed") {
       this.socketSend(null, body);
       this.database.feed.push(body);
+    }
+
+    if (action === "push_public_Key") {
+      this.socketSend(null, body);
+      this.database.publicKey.push(body);
     }
 
     if (action === "find") {

@@ -52,16 +52,49 @@ const {
 const { Server } = require("./database/server");
 
 const twakeChannel = new Server();
-const bob = new Client("bob");
-const alice = new Client("alice");
-const titou = new Client("titou");
+const clients = [];
+const alice = new Client(twakeChannel, "alice");
+const bob = new Client(twakeChannel, "bob");
+const titou = new Client(twakeChannel, "titou");
+clients.push(bob);
+clients.push(alice);
+clients.push(titou);
+alice.openChannel(); //Alice open the channel, she is the first one
 
-createLink(bob, twakeChannel);
-connect(alice, twakeChannel);
-connect(titou, twakeChannel);
-console.log("batatartd", bob);
-exchangePrivateKey(bob, alice, twakeChannel);
-exchangePrivateKey(bob, titou, twakeChannel);
+alice.sendMessage("I am Alice");
+
+console.log("[step 1]", alice.messages);
+
+bob.openChannel();
+
+bob.sendMessage("I am Bob");
+
+console.log("[step 2a]", alice.messages);
+console.log("[step 2b]", bob.messages);
+const first_client = clients[0];
+function run(server) {
+  connect(bob, twakeChannel);
+  bob.createChannel(twakeChannel);
+  connect(alice, twakeChannel);
+  connect(titou, twakeChannel);
+  while (server.publicKeyCounter < server.database.publicKey.length) {
+    first_client.encryptChannelKeyForOther(
+      server.database.publicKey[server.publicKeyCounter].publicKey,
+      server
+    );
+
+    const new_client_name =
+      server.database.publicKey[server.publicKeyCounter].name;
+    const new_client = clients.filter((e) => e.name === new_client_name)[0];
+
+    new_client.encrypted_channel_privateKey =
+      server.database.feed[server.feedCounter];
+
+    server.publicKeyCounter++;
+    server.feedCounter++;
+  }
+}
+run(twakeChannel);
 
 bob.encrypted_channel_privateKey = bob.decryption(
   Buffer.from(bob.encrypted_channel_privateKey)
@@ -70,13 +103,14 @@ bob.encrypted_channel_privateKey = bob.decryption(
 alice.encrypted_channel_privateKey = alice.decryption(
   Buffer.from(alice.encrypted_channel_privateKey)
 );
+
 titou.encrypted_channel_privateKey = titou.decryption(
   Buffer.from(titou.encrypted_channel_privateKey)
 );
 
 console.log(
-  titou.encrypted_channel_privateKey.toString() ===
-    bob.encrypted_channel_privateKey.toString() &&
-    titou.encrypted_channel_privateKey.toString() ===
-      alice.encrypted_channel_privateKey.toString()
+  bob.encrypted_channel_privateKey.toString() ===
+    alice.encrypted_channel_privateKey.toString() &&
+    bob.encrypted_channel_privateKey.toString() ===
+      titou.encrypted_channel_privateKey.toString()
 );

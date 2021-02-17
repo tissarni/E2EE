@@ -1,6 +1,8 @@
 class Database {
   constructor() {
-    (this.member = []), (this.feed = []), (this.publicKey = []);
+    this.member = [];
+    this.feed = [];
+    this.publicKey = [];
   }
 }
 
