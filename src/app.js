@@ -1,25 +1,4 @@
 /*
-
-[
-    "channel_publicKey": "...",
-    "members": [
-        "bob": [
-            "publicKey": "...",
-            "encrypted_channel_privateKey": "..."
-        ],
-        "alice": [
-            "publicKey": "...",
-            "encrypted_channel_privateKey": "..."
-        ],
-        ...
-    ]
-    Alice -> [Keys State]
-    Alice -> Message
-    Bob -> [Request Keys State for Bob public Key]
-    Alice -> [Keys State with Bob encripted key]
-    Alice -> Message
-]
-
 Step1. Alice alone
 - channel_publicKey
 - Alice publicKey
@@ -38,7 +17,6 @@ Step3. Alice want to send a message
 - Alice encrypted channel privateKey
 - Bob publicKey
 - Bob encrypted channel privateKey
-
 */
 
 const { Client } = require("./client/client");
@@ -59,24 +37,14 @@ const titou = new Client(twakeChannel, "titou");
 clients.push(bob);
 clients.push(alice);
 clients.push(titou);
-alice.openChannel(); //Alice open the channel, she is the first one
 
-alice.sendMessage("I am Alice");
-
-console.log("[step 1]", alice.messages);
-
-bob.openChannel();
-
-bob.sendMessage("I am Bob");
-
-console.log("[step 2a]", alice.messages);
-console.log("[step 2b]", bob.messages);
 const first_client = clients[0];
 function run(server) {
   connect(bob, twakeChannel);
   bob.createChannel(twakeChannel);
   connect(alice, twakeChannel);
   connect(titou, twakeChannel);
+
   while (server.publicKeyCounter < server.database.publicKey.length) {
     first_client.encryptChannelKeyForOther(
       server.database.publicKey[server.publicKeyCounter].publicKey,
@@ -96,21 +64,26 @@ function run(server) {
 }
 run(twakeChannel);
 
-bob.encrypted_channel_privateKey = bob.decryption(
-  Buffer.from(bob.encrypted_channel_privateKey)
-);
+console.log("feed", twakeChannel.database.feed);
+console.log("publicKey", twakeChannel.database.publicKey);
 
-alice.encrypted_channel_privateKey = alice.decryption(
-  Buffer.from(alice.encrypted_channel_privateKey)
-);
+//step 1
+bob.openChannel(); //bob open the channel, he is the first one
+bob.sendMessage("I am Bob");
+console.log("[step 1]", bob.messages);
 
-titou.encrypted_channel_privateKey = titou.decryption(
-  Buffer.from(titou.encrypted_channel_privateKey)
-);
+//step 2
+alice.openChannel();
+alice.sendMessage("I am Alice");
+console.log("[step 2b]", bob.messages);
+console.log("[step 2a]", alice.messages);
+console.log("[step 2t]", titou.messages);
 
-console.log(
-  bob.encrypted_channel_privateKey.toString() ===
-    alice.encrypted_channel_privateKey.toString() &&
-    bob.encrypted_channel_privateKey.toString() ===
-      titou.encrypted_channel_privateKey.toString()
-);
+//step 3
+bob.closeChannel();
+titou.openChannel();
+titou.sendMessage("Hello team, ca va ?");
+bob.openChannel();
+console.log("[step 3b]", bob.messages);
+console.log("[step 3a]", alice.messages);
+console.log("[step 3t]", titou.messages);

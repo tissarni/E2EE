@@ -8,7 +8,7 @@ class Client {
     this.messages = [];
     this.ecdh = crypto.createECDH("secp256k1");
     this.keys = crypto.generateKeyPairSync("rsa", {
-      modulusLength: 2048,
+      modulusLength: 4096,
     });
   }
 
@@ -18,7 +18,11 @@ class Client {
     //Connect to websockets
     this.server.socketConnect(this, (event) => {
       if (event.type === "message") {
-        this.messages.push(event.data);
+        const message = event.data;
+        try {
+          message.message = this.decryptMessages(message.message).toString();
+        } catch (err) {}
+        this.messages.push(message);
       }
     });
   }
@@ -31,9 +35,11 @@ class Client {
 
   sendMessage(message) {
     //Ask server to add message
+    const encrypted_message = this.encryptMessages(message);
+    //const decrypted_message = this.decryptMessages(encrypted_message);
     this.server.socketSend(this, {
       type: "message",
-      data: { message: message, sender: this.name },
+      data: { message: encrypted_message, sender: this.name },
     });
   }
 
@@ -45,12 +51,35 @@ class Client {
     return decrypt(encrypted, this.keys.privateKey);
   }
 
+  encryptMessages(message) {
+    return encrypt(message, this.server.database.feed[0]);
+  }
+
+  decryptMessages(ecnrypted) {
+    const decrypted_chennel_key = this.decryption(
+      this.encrypted_channel_privateKey
+    );
+
+    const private_channel_key = crypto.createPrivateKey({
+      key: decrypted_chennel_key,
+      format: "der",
+      type: "pkcs8",
+    });
+    return decrypt(ecnrypted, private_channel_key);
+  }
   createChannel(server) {
     const clientToFind = server.database.member[0];
     //server.socketConnect(this, (message) => {});
-    const publicKey = crypto.randomBytes(32);
-    server.httpSend("push_feed", publicKey);
-    const privateKey_encrypted = this.encryption(crypto.randomBytes(32));
+    const serverKey = crypto.generateKeyPairSync("rsa", {
+      modulusLength: 680,
+      privateKeyEncoding: {
+        type: "pkcs8",
+        format: "der",
+      },
+    });
+    server.httpSend("push_feed", serverKey.publicKey);
+
+    const privateKey_encrypted = this.encryption(serverKey.privateKey);
     this.encrypted_channel_privateKey = privateKey_encrypted; // pas forcément utile, Il faut voir si on peu stocké la clef privé chiffré dans l'object
     clientToFind.encrypted_channel_privateKey = privateKey_encrypted;
   }
