@@ -1,9 +1,9 @@
 const crypto = require("crypto");
 
 function connect(client, server) {
-  /*server.socketConnect(client, (message) => {
+  server.socketConnect(client, (message) => {
     //console.log(client.name, "received: ", message);
-  });*/
+  });
   server.httpSend("connect", client);
 }
 

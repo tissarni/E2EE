@@ -1,44 +1,21 @@
-/*
-Step1. Alice alone
-- channel_publicKey
-- Alice publicKey
-- Alice encrypted channel privateKey
-
-Step2. Bob want to join
-- channel_publicKey
-- Alice publicKey
-- Alice encrypted channel privateKey
-- Bob publicKey
-- There is no Bob encrypted channel privateKey
-
-Step3. Alice want to send a message
-- channel_publicKey
-- Alice publicKey
-- Alice encrypted channel privateKey
-- Bob publicKey
-- Bob encrypted channel privateKey
-*/
-
 const { Client } = require("./client/client");
-const {
-  createLink,
-  connect,
-  exchangePrivateKey,
-  encrypt,
-  decrypt,
-} = require("./utils/cryptographie");
+const { connect } = require("./utils/cryptographie");
 const { Server } = require("./database/server");
 
 const twakeChannel = new Server();
+
 const clients = [];
+
 const alice = new Client(twakeChannel, "alice");
 const bob = new Client(twakeChannel, "bob");
 const titou = new Client(twakeChannel, "titou");
+
 clients.push(bob);
 clients.push(alice);
 clients.push(titou);
 
 const first_client = clients[0];
+
 function run(server) {
   connect(bob, twakeChannel);
   bob.createChannel(twakeChannel);
@@ -62,13 +39,14 @@ function run(server) {
     server.feedCounter++;
   }
 }
+
 run(twakeChannel);
 
 console.log("feed", twakeChannel.database.feed);
 console.log("publicKey", twakeChannel.database.publicKey);
 
 //step 1
-bob.openChannel(); //bob open the channel, he is the first one
+bob.openChannel();
 bob.sendMessage("I am Bob");
 console.log("[step 1]", bob.messages);
 

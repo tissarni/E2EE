@@ -36,7 +36,6 @@ class Client {
   sendMessage(message) {
     //Ask server to add message
     const encrypted_message = this.encryptMessages(message);
-    //const decrypted_message = this.decryptMessages(encrypted_message);
     this.server.socketSend(this, {
       type: "message",
       data: { message: encrypted_message, sender: this.name },
